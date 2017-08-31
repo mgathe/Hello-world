@@ -1,0 +1,110 @@
+<?xml version = "1.0"?>
+
+<project name = "dev-ops-sample" basedir = "." default = "usage">
+
+
+   <property name="server.home" value="C:\Program Files\Apache Software Foundation\Tomcat 7.0" /> 
+   <property name = "deploy.path" value = "C:\Program Files(x86)\Apache Software Foundation\Tomcat 7.0\webapps"/>
+   <property name = "src.dir" value = "src"/>
+   <property name = "web.dir" value = "web"/>
+   <property name = "javadoc.dir" value = "doc"/>
+   <property name = "build.dir" value = "${web.dir}/WEB-INF/classes"/>
+   <property name = "name" value = "dev-ops"/>
+
+   
+<!-- Define the CLASSPATH -->
+
+  <path id="master-classpath">
+
+    <fileset dir="${server.home}/bin">
+      <include name="*.jar"/>
+    </fileset>
+
+    <pathelement location="${server.home}/lib"/>
+    <fileset dir="${server.home}/lib">
+      <include name="*.jar"/>
+    </fileset>
+
+  </path>
+    
+
+   <target name = "usage">
+      <echo message = ""/>
+      <echo message = "${name} build file"/>
+      <echo message = "-----------------------------------"/>
+      <echo message = ""/>
+      <echo message = "Available targets are:"/>
+      <echo message = ""/>
+      <echo message = "deploy    --> Deploy application as directory"/>
+      <echo message = "deploywar --> Deploy application as a WAR file"/>
+      <echo message = "generate_war --> Generate the WAR file without deploying "/>
+
+
+      <echo message = ""/>
+   </target>
+
+   <target name = "build" description = "Compile main source tree java files to class files">
+      <mkdir dir = "${build.dir}"/>
+      
+      <javac destdir = "${build.dir}" source = "1.8" target = "1.8" debug = "true"
+         deprecation = "false" optimize = "false" failonerror = "true">
+         
+         <src path = "${src.dir}"/>
+         <classpath refid = "master-classpath"/>
+         
+      </javac>
+    
+    <copy  todir="${web.dir}">
+      <fileset dir="${src.dir}" excludes="**/*.java"/>
+    </copy>
+
+    </target>
+
+
+    <target name = "generate_war" depends = "build" description = "Generate the WAR file without deploying">
+   
+      <war destfile = "${name}.war" webxml = "${web.dir}/WEB-INF/web.xml">
+         <fileset dir = "${web.dir}">
+            <include name = "**/*.*"/>
+         </fileset>
+      </war>
+    </target>
+
+
+<target name="deploy_to_env" depends = "generate_war" description = "deploy to a remote machine">
+
+  <exec executable="cmd">
+    <arg value="/c"/>
+    <arg value="deploy.bat"/>
+    <arg value="-p"/>
+  </exec>
+
+</target>
+
+
+   <target name = "deploywar" depends = "build" description = "Deploy application as a WAR file">
+   
+      <war destfile = "${name}.war" webxml = "${web.dir}/WEB-INF/web.xml">
+         <fileset dir = "${web.dir}">
+            <include name = "**/*.*"/>
+         </fileset>
+      </war>
+      
+      <copy todir = "${deploy.path}" preservelastmodified = "true">
+         <fileset dir = ".">
+            <include name = "*.war"/>
+         </fileset>
+      </copy>
+      
+   </target>
+    
+
+   <target name = "clean" description = "Clean output directories">
+      <delete>
+         <fileset dir = "${build.dir}">
+            <include name = "**/*.class"/>
+         </fileset>
+      </delete>
+   </target>
+   
+</project>
